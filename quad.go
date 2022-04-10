@@ -5,11 +5,6 @@ import (
 	"sync"
 )
 
-type Object struct {
-	Value interface{}
-	Error error
-}
-
 type Worker[inT any, outT any] interface {
 	func(ctx context.Context, in <-chan inT, out chan<- outT, errChan chan<- error)
 }
