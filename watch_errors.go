@@ -1,10 +1,15 @@
 package quad
 
-import "context"
+import (
+	"context"
+	"sync"
+)
 
-func WatchErrors(errs <-chan error, errorVar *error, cancel context.CancelFunc) {
+func WatchErrors(errorsChannel <-chan error, wg *sync.WaitGroup, errorVar *error, cancel context.CancelFunc) {
+	wg.Add(1)
 	go func() {
-		for err := range errs {
+		defer wg.Done()
+		for err := range errorsChannel {
 			if errorVar != nil {
 				*errorVar = err
 			}
