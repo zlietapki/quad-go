@@ -14,12 +14,12 @@ type MyData struct {
 	Val  int
 }
 
-func worker1(ctx context.Context, in <-chan []MyData, out chan<- string, err chan error) {
+func worker1(ctx context.Context, in <-chan []MyData, out chan<- string, errChan chan<- error) {
 	for batch := range in {
 		for _, myData := range batch {
 			if myData.Name == "incorrect name" {
 				select {
-				case err <- errors.New("some worker1 error"):
+				case errChan <- errors.New("some worker1 error"):
 				case <-ctx.Done():
 					return
 				}
@@ -35,11 +35,11 @@ func worker1(ctx context.Context, in <-chan []MyData, out chan<- string, err cha
 	}
 }
 
-func worker2(ctx context.Context, in <-chan string, out chan<- string, err chan error) {
+func worker2(ctx context.Context, in <-chan string, out chan<- string, errChan chan<- error) {
 	for name := range in {
 		if name == "Andrey" {
 			select {
-			case err <- errors.New("worker 2 error"):
+			case errChan <- errors.New("worker 2 error"):
 			case <-ctx.Done():
 				return
 			}

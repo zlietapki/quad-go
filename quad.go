@@ -11,27 +11,27 @@ type Object struct {
 }
 
 type Worker[inT any, outT any] interface {
-	func(ctx context.Context, in <-chan inT, out chan<- outT, err chan error)
+	func(ctx context.Context, in <-chan inT, out chan<- outT, errChan chan<- error)
 }
 
-func MakeWorkerPool[inT any, outT any, workerT Worker[inT, outT]](ctx context.Context, worker workerT, size int, in <-chan inT) (<-chan outT, chan error) {
+func MakeWorkerPool[inT any, outT any, workerT Worker[inT, outT]](ctx context.Context, worker workerT, size int, in <-chan inT) (<-chan outT, <-chan error) {
 	out := make(chan outT)
-	err := make(chan error)
+	errChan := make(chan error)
 
 	wg := new(sync.WaitGroup)
 	for i := 0; i < size; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			worker(ctx, in, out, err)
+			worker(ctx, in, out, errChan)
 		}()
 	}
 
 	go func() {
 		wg.Wait()
 		close(out)
-		close(err)
+		close(errChan)
 	}()
 
-	return out, err
+	return out, errChan
 }
